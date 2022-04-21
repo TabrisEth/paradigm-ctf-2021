@@ -1,6 +1,6 @@
 compiler:
   solc:
-    version: "0.4.24"
+    version: "0.8.0"
 dotenv: .env
 networks:
   default: "development"
