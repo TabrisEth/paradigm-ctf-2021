@@ -16,7 +16,7 @@ contract BankAttacker {
         weth = IWETH9(weth9_addr);
     }
 
-    function attack() external payable {
+    function attack() external {
         console.log("attack start2");
 
         // start re-entrancy chain

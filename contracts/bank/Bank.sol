@@ -15,8 +15,8 @@ contract ERC20Like {
 }
 
 contract Bank {
-    address public owner;
-    address public pendingOwner;
+    address public owner; // slot 0
+    address public pendingOwner; // slot 1
 
     struct Account {
         string accountName;
@@ -24,14 +24,15 @@ contract Bank {
         mapping(address => uint256) balances;
     }
 
-    // @ctf storage layout https://docs.soliditylang.org/en/v0.6.8/internals/layout_in_storage.html
-    // accounts[addr] = keccak(addr . 2)
-    // accounts[addr][accountId] = keccak(keccak(addr . 2)) + accountId * 3
+    // 根据<存储布局>可以分析出：
+    // accounts 为字典mapping存储布局，key的位置是keccak256(key.slot)，则：accounts[addr] = keccak(addr . 2)
+    // accounts[addr] 的值为动态数组，起始位置就是：keccak(addr . 2) ， 且一个Account会占用三个存储位置，则：accounts[addr][accountId] = keccak(keccak(addr . 2)) + accountId * 3
+    // 然后可以推算出：
     // accounts[addr][accountId].accountName = keccak(keccak(addr . 2)) + accountId * 3 (if string size < 32)
     // accounts[addr][accountId].uniqueTokens = keccak(keccak(addr . 2)) + accountId * 3 + 1
     // accounts[addr][accountId].balances[token]  = keccak( token . [keccak(keccak(addr . 2)) + accountId * 3 + 2] )
-    // @ctf NOT publici n original challenge, just for easier debugging
-    mapping(address => Account[]) public accounts;
+
+    mapping(address => Account[]) public accounts; // slot(2)
 
     constructor() public {
         owner = msg.sender;
@@ -47,7 +48,7 @@ contract Bank {
             "depositToken/bad-account"
         );
 
-        // open a new account for the user if necessary
+        // 如果有必要，则创建一个新的account
         if (accountId == accounts[msg.sender].length) {
             accounts[msg.sender].length++;
         }
@@ -55,9 +56,10 @@ contract Bank {
         Account storage account = accounts[msg.sender][accountId];
         uint256 oldBalance = account.balances[token];
 
-        // check the user has enough balance and no overflows will occur
+        // 检查是否有足够的的余额，避免发生溢出
         require(oldBalance + amount >= oldBalance, "depositToken/overflow");
         // @ctf we re-enter here and close the account, import to re-enter before uniqueTokens++
+        // @ctf 在这里我们可以进行重入攻击并关闭用户，从而避免 uniqueTokens++
         require(
             ERC20Like(token).balanceOf(msg.sender) >= amount,
             "depositToken/low-sender-balance"
@@ -72,6 +74,7 @@ contract Bank {
         account.balances[token] += amount;
 
         // transfer the tokens in
+        // 将 token 的特定金额 转入为bank合约地址
         uint256 beforeBalance = ERC20Like(token).balanceOf(address(this));
         require(
             ERC20Like(token).transferFrom(msg.sender, address(this), amount),
@@ -98,7 +101,7 @@ contract Bank {
         uint256 lastAccount = accounts[msg.sender].length - 1;
         uint256 oldBalance = account.balances[token];
 
-        // check the user can actually withdraw the amount they want and we have enough balance
+        // 检查用户确实有足够的余额可以提取金额
         require(oldBalance >= amount, "withdrawToken/underflow");
         require(
             ERC20Like(token).balanceOf(address(this)) >= amount,

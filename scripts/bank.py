@@ -30,7 +30,7 @@ def deploy():
 def attack():
     # 攻击代码写到这里
     attack_contract = BankAttacker.deploy(setupbank, weth, {"from": attacker})
-    attack_contract.attack({"from": attacker, "value": Web3.toWei(40, "ether")})
+    attack_contract.attack({"from": attacker})
     print(weth.balanceOf(bankAddr))
     return
 
