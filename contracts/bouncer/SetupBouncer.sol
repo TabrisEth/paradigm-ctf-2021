@@ -2,19 +2,18 @@ pragma solidity 0.8.0;
 
 import "./Bouncer.sol";
 
-interface IWETH9 is ERC20Like {
+interface WETH9 is ERC20Like {
     function deposit() external payable;
 }
 
 contract SetupBouncer {
     address constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    IWETH9 public weth;
+    WETH9 constant weth = WETH9(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     Bouncer public bouncer;
     Party public party;
 
-    constructor(address weth_addr) payable {
+    constructor() payable {
         require(msg.value == 100 ether);
-        weth = IWETH9(weth_addr);
         // give some cash to the bouncer for his drinks
         bouncer = new Bouncer{value: 50 ether}();
 
