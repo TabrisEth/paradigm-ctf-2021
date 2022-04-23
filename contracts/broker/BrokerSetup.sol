@@ -58,27 +58,35 @@ contract BrokerSetup {
     IUniswapV2Pair public pair;
     Broker public broker;
 
+    // DECIMALS: 10 ** 18
     uint256 constant DECIMALS = 1 ether;
     uint256 totalBefore;
 
-    // create and bootstrap the token/weth pool for borrowing against WETH
+    // 创建并引导 代币/weth池 以借用 WETH
     constructor() payable {
         require(msg.value == 50 ether);
         weth.deposit{value: msg.value}();
 
+        //创建 broker 代币
         token = new BrokerToken();
+
+        // 使用uniV2 创建交易对： weth / broker_token
         pair = IUniswapV2Pair(
             factory.createPair(address(weth), address(token))
         );
+
         broker = new Broker(pair, ERC20Like(address(token)));
         token.transfer(address(broker), 500_000 * DECIMALS);
 
         // 1:25
+        // 将 25个weth 和 500000的broker token 转入uniswapV2交易对 ,mint生成流动性
         weth.transfer(address(pair), 25 ether);
         token.transfer(address(pair), 500_000 * DECIMALS);
         pair.mint(address(this));
 
+        // 将broker地址，允许weth进行转至broker地址， 并抵押25 ether, 以及借入250000的broker token
         weth.approve(address(broker), type(uint256).max);
+        // 抵押，并会传至weth
         broker.deposit(25 ether);
         broker.borrow(250_000 * DECIMALS);
 

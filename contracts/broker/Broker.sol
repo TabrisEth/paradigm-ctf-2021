@@ -54,12 +54,15 @@ contract Broker {
         token = _token;
     }
 
+    // 返回用于定价交易和分配流动性的 token0 和 token1 的储备 from uinswap V2
+    // 计算兑换利率
     function rate() public view returns (uint256) {
         (uint112 _reserve0, uint112 _reserve1, ) = pair.getReserves();
         uint256 _rate = uint256(_reserve0 / _reserve1);
         return _rate;
     }
 
+    // 根据uniswap 返回的兑换利率的 2/3 进行计算 比率
     function safeDebt(address user) public view returns (uint256) {
         return (deposited[user] * rate() * 2) / 3;
     }
@@ -80,7 +83,7 @@ contract Broker {
         token.transferFrom(msg.sender, address(this), amount);
     }
 
-    // repay a user's loan and get back their collateral. no discounts.
+    //偿还用户的贷款并取回他们的抵押品。没有折扣。
     function liquidate(address user, uint256 amount) public returns (uint256) {
         require(safeDebt(user) <= debt[user], "err: overcollateralized");
         debt[user] -= amount;
