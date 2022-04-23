@@ -84,7 +84,7 @@ contract Bouncer {
         tokens[who][address(entry.token)] += entry.amount;
     }
 
-    // redeem your tokens for their underlying erc20
+    // 将你的底层erc20 代币赎回
     function redeem(ERC20Like token, uint256 amount) public {
         tokens[msg.sender][address(token)] -= amount;
         payout(token, msg.sender, amount);

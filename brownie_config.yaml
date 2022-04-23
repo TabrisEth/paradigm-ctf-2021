@@ -9,12 +9,16 @@ compiler:
       - '@openzeppelin=OpenZeppelin/openzeppelin-contracts@3.4.0'
 dotenv: .env
 networks:
-  default: mainnet-fork
+  default: development
   mainnet-fork:
     verify: False
     cmd_settings:
       unlimited_contract_size: True
       accounts: 10
       default_balance: '100 ether'
+  development:
+    persist: false
+    cmd_settings:
+      default_balance: '10000 ether'
 wallets:
   from_key: ${PRIVATE_KEY}
