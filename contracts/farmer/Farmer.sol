@@ -106,7 +106,7 @@ contract CompDaiFarmer {
         require(dai.transfer(msg.sender, amount));
     }
 
-    // mints all possible dai to cdai
+    //将所有可能的 dai 转换为 cdai
     function mint() public {
         uint256 daiBalance = dai.balanceOf(address(this));
         dai.approve(address(CDAI), daiBalance);
